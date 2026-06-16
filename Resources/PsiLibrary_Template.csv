@@ -1,0 +1,12 @@
+Psi_Typ_Code;Kategorie;Untertyp;Beschreibung;Psi_Wert;Quelle;Gueltig_fuer;Status;Version
+FEN-LAI-01;Fensteranschluss;Laibung;Fensterlaibung gedaemmt, Rahmen ueberdaemmt;0.040;DIN 4108 Beiblatt 2 (2019);Neubau;freigegeben;2024-01
+FEN-STU-01;Fensteranschluss;Sturz;Fenstersturz mit Rollladenkasten gedaemmt;0.080;DIN 4108 Beiblatt 2 (2019);Neubau;freigegeben;2024-01
+FEN-BRU-01;Fensteranschluss;Bruestung;Fensterbruestung mit Anschlag, gedaemmt;0.050;DIN 4108 Beiblatt 2 (2019);Neubau;freigegeben;2024-01
+TUE-LAI-01;Aussentueranschluss;Laibung;Aussentuer Laibung gedaemmt;0.050;Herstellernachweis;Neubau;freigegeben;2024-01
+TUE-SCH-01;Aussentueranschluss;Schwelle;Tuerschwelle mit thermischer Trennung;0.250;DIN 4108 Beiblatt 2 (2019);Neubau;freigegeben;2024-01
+TER-SCH-01;Terrassentueranschluss;Schwelle;Bodentiefe Terrassentuer, Schwelle nicht unterdaemmt;0.320;Sachverstaendigengutachten;Bestand;entwurf;2024-01
+SOC-AWB-01;Sockel/Bodenplattenrand;Außenwand auf Bodenplatte;Aussenwand auf Bodenplatte, Perimeterdaemmung;0.350;DIN 4108 Beiblatt 2 (2019);Neubau;freigegeben;2024-01
+SOC-AWB-02;Sockel/Bodenplattenrand;Außenwand auf Bodenplatte;Aussenwand auf Bodenplatte, ungedaemmt (Bestand);0.700;Pauschalwert EnEV;Bestand;freigegeben;2024-01
+GDE-DEC-01;Geschossdeckenanschluss;Deckenrand an Außenwand;Geschossdecke an Aussenwand, Stirndaemmung;0.080;DIN 4108 Beiblatt 2 (2019);Neubau;freigegeben;2024-01
+GDE-DEC-02;Geschossdeckenanschluss;Deckenrand an Außenwand;Auskragende Balkonplatte ohne thermische Trennung;0.650;DIN 4108 Beiblatt 2 (2019);Bestand;freigegeben;2024-01
+PAUSCHAL;Allgemein;Pauschal;Pauschaler Zuschlag delta U_WB nicht ueber Einzelnachweis;0.100;DIN 4108;Bestand;hinweis;2024-01

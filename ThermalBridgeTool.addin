@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+  <AddIn Type="Application">
+    <Name>Thermal Bridge Tool</Name>
+    <Assembly>ThermalBridgeTool.dll</Assembly>
+    <AddInId>8f2a6c10-7d4e-4c2a-9b3f-1d6e9a0c5b21</AddInId>
+    <FullClassName>ThermalBridgeTool.App</FullClassName>
+    <VendorId>SES</VendorId>
+    <VendorDescription>Thermal Bridge Detection Add-in</VendorDescription>
+  </AddIn>
+</RevitAddIns>

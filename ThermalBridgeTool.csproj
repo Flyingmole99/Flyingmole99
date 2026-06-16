@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Revit 2025 runs on .NET 8 (net8.0-windows).
+    For Revit 2023/2024 (which run on .NET Framework 4.8) switch the
+    TargetFramework to net48 and the Revit API package versions to 2024.*.
+
+    The Revit API references are pulled from the Nice3point NuGet packages,
+    which are restore-friendly and do not require a local Revit install on the
+    build machine. If you prefer to reference the DLLs directly, replace the
+    PackageReference entries with <Reference Include="RevitAPI"> + HintPath to
+    your Revit installation (C:\Program Files\Autodesk\Revit 2025\).
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <UseWPF>true</UseWPF>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>ThermalBridgeTool</RootNamespace>
+    <AssemblyName>ThermalBridgeTool</AssemblyName>
+    <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
+    <Platforms>x64</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
+    <!-- Revit loads the add-in; do not try to copy the API DLLs to output. -->
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Revit 2025 API. Marked ExcludeAssets=runtime so they are not copied. -->
+    <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="2025.*">
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </PackageReference>
+    <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="2025.*">
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </PackageReference>
+
+    <!-- XLSX export. CSV export works without any dependency. -->
+    <PackageReference Include="ClosedXML" Version="0.104.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="ThermalBridgeTool.addin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\PsiLibrary_Template.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
