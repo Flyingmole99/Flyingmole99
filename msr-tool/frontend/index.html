@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MSR-Planungstool</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>MSR-Planungstool <span class="sub">BACtwin</span></h1>
+    <div class="proj">
+      <label>Projekt
+        <select id="projektSelect"></select>
+      </label>
+      <button id="neuesProjekt" class="btn">+ Projekt</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- Palette -->
+    <aside class="palette panel">
+      <div class="panel-head">
+        <h2>Palette – Baugruppen</h2>
+        <input id="paletteSuche" type="search" placeholder="suchen (z. B. KES, Kessel)…">
+      </div>
+      <ul id="paletteListe" class="palette-liste"></ul>
+    </aside>
+
+    <!-- Arbeitsbereich -->
+    <section class="workspace">
+      <div class="anlage-bar panel">
+        <label>Anlage
+          <select id="anlageSelect"></select>
+        </label>
+        <form id="anlageForm" class="inline-form">
+          <input id="aGewerk" value="420" size="4" title="Gewerk (KG)">
+          <input id="aKuerzel" value="EZA" size="5" title="Anlagenkürzel">
+          <input id="aNummer" type="number" value="1" min="1" size="3" title="Nummer">
+          <button class="btn" type="submit">+ Anlage</button>
+        </form>
+      </div>
+
+      <div id="dropzone" class="dropzone">
+        <div class="dz-inner">
+          <strong id="dzTitel">Keine Anlage gewählt</strong>
+          <p id="dzHint">Lege oben eine Anlage an, dann ziehe eine Baugruppe hierher.</p>
+          <ul id="baugruppenListe" class="bg-liste"></ul>
+        </div>
+      </div>
+
+      <div class="dp-panel panel">
+        <div class="panel-head row">
+          <h2>Datenpunkte <span id="dpCount" class="badge">0</span></h2>
+          <div class="downloads">
+            <a id="dlDatenpunkte" class="btn ghost" href="#">⭳ Datenpunktliste</a>
+            <a id="dlKabel" class="btn ghost" href="#">⭳ Kabelzugliste</a>
+          </div>
+        </div>
+        <div class="dp-stats" id="dpStats"></div>
+        <div class="table-wrap">
+          <table id="dpTabelle">
+            <thead><tr>
+              <th>BAS</th><th>Typ</th><th>Beschreibung</th><th>Einheit</th>
+              <th>Art</th><th>Tr</th><th>Al</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="status" class="status" role="status"></div>
+  <script src="app.js"></script>
+</body>
+</html>
