@@ -71,7 +71,7 @@ def test_instantiate_and_export():
             cur.execute("SELECT count(*) FROM project.datenpunkt WHERE anlage_id=%s AND bas NOT LIKE '420\\_EZA01\\_KES01\\_%%'", (anlage_id,))
             assert cur.fetchone()[0] == 0
 
-            # Export
+            # Export Datenpunktliste
             with tempfile.TemporaryDirectory() as td:
                 path = os.path.join(td, "dp.xlsx")
                 n = export_datapoint_list(cur, anlage_id, path)
@@ -80,6 +80,23 @@ def test_instantiate_and_export():
                 ws = wb.active
                 assert ws.max_row == n + 1          # + Kopfzeile
                 assert ws.cell(row=1, column=1).value == "Datenpunkt (BAS)"
+
+            # Export Kabelzugliste: eine Zeile je Hardware-Signal
+            from generators.cable_list.excel import export_cable_list
+            with tempfile.TemporaryDirectory() as td:
+                path = os.path.join(td, "kabel.xlsx")
+                n = export_cable_list(cur, anlage_id, path)
+                assert n == stats["hardware"] == 22
+                wb = load_workbook(path)
+                ws = wb.active
+                assert ws.cell(row=1, column=1).value == "Kabel-Nr."
+                # jede Signalzeile hat einen Kabeltyp und eine Kabel-Nr.
+                for row in ws.iter_rows(min_row=2, values_only=True):
+                    assert row[0] and row[0].startswith("W")     # Kabel-Nr.
+                    assert row[9]                                  # Kabeltyp
+                # mehrere Feldgeräte -> mehrere distinct Kabel
+                kabel = {row[0] for row in ws.iter_rows(min_row=2, values_only=True)}
+                assert 1 < len(kabel) <= 22
 
             _reset_project(cur)
     finally:

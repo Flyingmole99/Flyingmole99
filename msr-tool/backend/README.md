@@ -11,6 +11,7 @@ Datenfluss: **BACtwin-Workbooks → `catalog` (Import) → `project` (Instanziie
 | `naming/` | `NamingEngine` – komponiert den vollständigen BAS-Schlüssel eines Datenpunkts (Block 1-3 aus Kontext, Block 4-8 aus dem relativen Template-Muster) |
 | `domain/` | `instantiate_baugruppe` – expandiert ein Aggregat-Template rekursiv und materialisiert die Datenpunkte einer Baugruppe nach `project.datenpunkt` |
 | `generators/datapoint_list/` | Datenpunktliste einer Anlage als Excel (`.xlsx`) |
+| `generators/cable_list/` | Kabelzugliste einer Anlage als Excel – Hardware-Signale je Feldgerät zu Kabeln gebündelt |
 
 ### Instanziierung (Folding-Policy v1)
 
@@ -28,6 +29,16 @@ Datenfluss: **BACtwin-Workbooks → `catalog` (Import) → `project` (Instanziie
 **45 Datenpunkte** (6 Container, 4 Varianten-Dubletten, 17 Trend gefaltet,
 4 Alarm), davon **22 Hardware-I/O** – mit vollständig komponierten, je Anlage
 eindeutigen BAS-Bezeichnungen.
+
+### Kabelzugliste
+
+`generators/cable_list/export_cable_list` verdrahtet nur die Hardware-Datenpunkte
+und bündelt Signale je Feldgerät (BAS bis Betriebsmittel-Block) zu Kabeln.
+Kabeltyp/Adern/Querschnitt kommen aus `catalog.klemmen_vorlage` (objektspezifisch,
+sonst je Signalart als Default – Seed in `db/migrations/0004`).
+
+**Verifiziert:** Der Gaskessel liefert die **22 Hardware-Signale in 14 Kabeln**
+(Brenner 5, Pumpe 3, Ventil 2, Sicherheitskette je 1 …).
 
 ## Importer
 
