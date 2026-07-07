@@ -1,7 +1,38 @@
-# Backend – BACtwin-Importer
+# Backend – Importer, Instanziierung & Generatoren
+
+Datenfluss: **BACtwin-Workbooks → `catalog` (Import) → `project` (Instanziierung)
+→ Dokumente (Generatoren)**. Siehe `../db/` und `/docs/msr-tool/`.
+
+## Module
+
+| Modul | Aufgabe |
+|-------|---------|
+| `importer/` | liest die 3 Workbooks in `catalog` (s. u.) |
+| `naming/` | `NamingEngine` – komponiert den vollständigen BAS-Schlüssel eines Datenpunkts (Block 1-3 aus Kontext, Block 4-8 aus dem relativen Template-Muster) |
+| `domain/` | `instantiate_baugruppe` – expandiert ein Aggregat-Template rekursiv und materialisiert die Datenpunkte einer Baugruppe nach `project.datenpunkt` |
+| `generators/datapoint_list/` | Datenpunktliste einer Anlage als Excel (`.xlsx`) |
+
+### Instanziierung (Folding-Policy v1)
+
+`instantiate_baugruppe` expandiert das Template rekursiv und faltet gemäß
+`/docs/msr-tool/Beispiel-Gaskessel.md` §3:
+
+- `SV` (Structured-View-Container) → übersprungen (kein Datenpunkt).
+- `TL` (Trend) → auf den Basispunkt gefaltet (`trend=true`, Suffix `_TL`).
+- `EE` (Ereignis) → gefaltet (`alarm=true`), falls Basispunkt existiert; sonst
+  eigener Datenpunkt.
+- Gleicher BAS über verschiedene Objekttypen (`BI_HD`/`MI_HD` = alternative
+  Varianten) → erste gewinnt, BAS bleibt eindeutig (BACnet-Object_Name).
+
+**Verifiziert:** Der Gaskessel `BGP_KES_nM_AMEV1` ergibt aus 76 Objekten
+**45 Datenpunkte** (6 Container, 4 Varianten-Dubletten, 17 Trend gefaltet,
+4 Alarm), davon **22 Hardware-I/O** – mit vollständig komponierten, je Anlage
+eindeutigen BAS-Bezeichnungen.
+
+## Importer
 
 Liest die drei BACtwin-Bibliotheks-Workbooks in das `catalog`-Schema
-(siehe `../db/` und `/docs/msr-tool/Import-Pipeline.md`).
+(siehe `/docs/msr-tool/Import-Pipeline.md`).
 
 > Das Verzeichnis heißt `importer/` (nicht `import/` wie im Doku-Entwurf), weil
 > `import` in Python ein reserviertes Wort ist.
