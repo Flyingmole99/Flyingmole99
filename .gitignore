@@ -17,3 +17,13 @@ packages/
 *.dwl
 *.dwl2
 *~
+
+# Python (msr-tool/backend)
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# BACtwin-Bibliotheken (proprietär – nicht einchecken)
+*BACtwin*.xlsx

@@ -1,0 +1,48 @@
+# Spalten-Mapping Bibliothek 3 (Aggregat-Templates + Referenztabellen) -> catalog.
+workbook_glob: "*Bibliothek3*.xlsx"
+
+sheets:
+  aggregate:                     # -> catalog.aggregat_template (+ _dp)
+    name: "10 AggregateTempl"
+    data_start: 4
+    cols:
+      typ: 1
+      uuid: 2
+      gewerk: 3
+      kennung: 4
+      bezeichnung: 5
+      ref: 6                     # "Referenziertes Template" (leer bei Kopfzeile)
+      variante: 7
+      desc1: 9
+      desc2: 10
+      laenge: 11
+      object_name_bsp: 12
+    # BAS vorzerlegt – nur Block 4-8 (Medium..Erweiterung) wird als bas_relativ gespeichert
+    bas_blocks:
+      medium: 19
+      agg_kennung: 20
+      agg_nr: 21
+      bm_kennung: 22
+      bm_nr: 23
+      fn_kennung: 24
+      fn_nr: 25
+      erweiterung: 26
+
+  meldeklasse:                   # -> catalog.meldeklasse
+    name: "25 Meldeklasse"
+    data_start: 2
+    cols:
+      object_identifier: 1
+      bezeichnung_de: 2
+      bezeichnung_en: 3
+      priority: 4
+      ack_required: 5
+
+  priority_array:                # -> catalog.priority_array
+    name: "24 Priority_Array"
+    data_start: 2
+    cols:
+      prio: 0
+      verwendung: 1
+      empfehlung: 2
+      beschreibung: 3

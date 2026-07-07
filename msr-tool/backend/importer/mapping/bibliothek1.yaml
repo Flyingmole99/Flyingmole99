@@ -1,0 +1,60 @@
+# Spalten-Mapping Bibliothek 1 (Adressstruktur) -> catalog.
+# Indizes sind 0-basiert. "data_start" = erste Datenzeile (0-basiert).
+workbook_glob: "*Bibliothek1*.xlsx"
+
+sheets:
+  gewerke:                       # -> catalog.bac_gewerk
+    name: "3 Gewerke"
+    data_start: 2
+    cols:
+      kg: 1
+      kuerzel: 2
+      kuerzel_1z: 3
+      bezeichnung_de: 4
+      kuerzel_en: 8
+      kuerzel_1z_en: 9
+      bezeichnung_en: 10
+
+  vokabular:                     # -> catalog.bac_vokabular
+    name: "4 BACtwin-BAS"
+    data_start: 6
+    # block: [kuerzel_col, bezeichnung_col, beschreibung_col]
+    blocks:
+      1: [3, 4, null]
+      2: [6, 7, 8]
+      3: [10, 11, 12]
+      4: [14, 15, 16]
+      5: [18, 19, 20]
+      6: [22, 23, 24]
+      7: [26, 27, 28]
+      8: [30, 31, 32]
+
+# BAS-Profile (Blatt "2 Gliederung") als Seed – Blockstruktur ist Konfiguration,
+# nicht zeilenweise importierte Daten.
+naming_profiles:
+  - name: "BACtwin ungekürzt"
+    variante: ungekuerzt
+    trennzeichen_default: "_"
+    segmente:
+      - {block: "1",   name: "Gewerk",          optional: false}
+      - {block: "2",   name: "Anlage",          optional: false}
+      - {block: "2.1", name: "Teilanlage",      optional: true}
+      - {block: "3",   name: "Baugruppe",       optional: false}
+      - {block: "4",   name: "Medium/Position", optional: false}
+      - {block: "5",   name: "Aggregat",        optional: false}
+      - {block: "6",   name: "Betriebsmittel",  optional: false}
+      - {block: "7",   name: "BM-Funktion",     optional: false}
+      - {block: "8",   name: "Erweiterung",     optional: true}
+  - name: "BACtwin gekürzt"
+    variante: gekuerzt
+    trennzeichen_default: "_"
+    segmente:
+      - {block: "1",   name: "Gewerk",          optional: false, einstellig: true}
+      - {block: "2",   name: "Anlage",          optional: false}
+      - {block: "2.1", name: "Teilanlage",      optional: true}
+      - {block: "3",   name: "Baugruppe",       optional: false}
+      - {block: "4",   name: "Medium/Position", optional: false}
+      - {block: "5",   name: "Aggregat",        optional: false}
+      - {block: "6",   name: "Betriebsmittel",  optional: false, einstellig: true}
+      - {block: "7",   name: "BM-Funktion",     optional: false, einstellig: true}
+      - {block: "8",   name: "Erweiterung",     optional: true}

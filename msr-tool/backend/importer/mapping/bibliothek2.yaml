@@ -1,0 +1,51 @@
+# Spalten-Mapping Bibliothek 2 (Datenpunkt-Objekttypen) -> catalog.
+workbook_glob: "*Bibliothek2*.xlsx"
+
+sheets:
+  objekttypen_de:                # -> catalog.dp_objekttyp
+    name: "8 BACtwin_Objects_DE"
+    data_start: 1
+    cols:
+      obj_sort: 1
+      uuid: 2
+      kennung: 3
+      object_type: 4
+      bezeichnung: 5
+  objekttypen_en:                # nur bezeichnung_en (Join per UUID)
+    name: "8 BACtwin_Objects_EN"
+    data_start: 1
+    cols:
+      uuid: 2
+      bezeichnung: 5
+
+  # Property-Detailblätter: Spalten werden über den HEADER-NAMEN gelesen
+  # (Positionen variieren je Blatt), Datenzeilen an "AMEV" in der Kennung erkannt.
+  properties:                    # -> catalog.dp_objekt_property
+    header_row: 0
+    kennung_col: 2
+    by_name:
+      object_name_muster: "Object_Name"
+      description_muster: "Description"
+      units: "Units"
+      min_pres: "Min_Pres_Value"
+      max_pres: "Max_Pres_Value"
+      notification_class: "Notification_Class"
+      low_limit: "Low_Limit"
+      high_limit: "High_Limit"
+      deadband: "Deadband"
+    numeric: ["min_pres", "max_pres", "low_limit", "high_limit", "deadband"]
+    names:
+      - "8.1 AI"
+      - "8.2 AO_AV"
+      - "8.3 BI"
+      - "8.4 BO_BV"
+      - "8.5 CAL"
+      - "8.6 DEV"
+      - "8.7 EE"
+      - "8.8 LP"
+      - "8.9 MI"
+      - "8.10 MO_MV"
+      - "8.11 NC"
+      - "8.12 SCH"
+      - "8.13 SV"
+      - "8.14 TL"
