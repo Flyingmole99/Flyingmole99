@@ -71,3 +71,27 @@ class NamingEngine:
         """Block 7 allein (BM-Funktion) für die Anzeige."""
         r = bas_relativ or {}
         return _block(r.get("fn_kennung"), r.get("fn_nr"), self.variante)
+
+    def _num(self, nummer: int) -> str:
+        return f"{nummer:d}" if self.variante == "gekuerzt" else f"{nummer:02d}"
+
+    def anlage_bas(self, gewerk: str, kuerzel: str, nummer: int,
+                   teilanlage: int | None = None) -> str:
+        """Block 1-2 (+ optional Teilanlage) -> Anlagen-BAS."""
+        bas = f"{gewerk}{self.sep}{kuerzel}{self._num(nummer)}"
+        if teilanlage is not None:
+            bas = f"{bas}°{self._num(teilanlage)}"
+        return bas
+
+    def baugruppe_bas(self, anlage_bas: str, kuerzel: str, nummer: int) -> str:
+        """Block 1-3 -> Baugruppen-BAS (Präfix für die Datenpunkte)."""
+        return f"{anlage_bas}{self.sep}{kuerzel}{self._num(nummer)}"
+
+
+def default_baugruppe_kuerzel(kennung: str) -> str:
+    """Leitet das Baugruppen-Kürzel aus der Template-Kennung ab.
+
+    'BGP_KES_nM_AMEV1' -> 'KES', 'AGG_BRE_nM_AMEV1' -> 'BRE'. Fallback: Kennung.
+    """
+    parts = (kennung or "").split("_")
+    return parts[1] if len(parts) > 1 and parts[1] else (kennung or "")

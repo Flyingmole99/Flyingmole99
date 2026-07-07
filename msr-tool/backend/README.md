@@ -12,6 +12,40 @@ Datenfluss: **BACtwin-Workbooks → `catalog` (Import) → `project` (Instanziie
 | `domain/` | `instantiate_baugruppe` – expandiert ein Aggregat-Template rekursiv und materialisiert die Datenpunkte einer Baugruppe nach `project.datenpunkt` |
 | `generators/datapoint_list/` | Datenpunktliste einer Anlage als Excel (`.xlsx`) |
 | `generators/cable_list/` | Kabelzugliste einer Anlage als Excel – Hardware-Signale je Feldgerät zu Kabeln gebündelt |
+| `api/` | FastAPI-REST-Schnittstelle (Palette, Projekte, Drag-&-Drop-Instanziierung, Dokument-Downloads) |
+
+## REST-API (`api/`)
+
+FastAPI-App unter `api.app:app`. Start (Entwicklung):
+
+```bash
+DATABASE_URL="host=/var/run/postgresql dbname=msr user=postgres" \
+    uvicorn api.app:app --reload
+```
+
+Interaktive Doku: `/docs` (Swagger) bzw. `/openapi.json`.
+
+| Methode & Pfad | Zweck |
+|----------------|-------|
+| `GET  /catalog/aggregate-templates?typ=Baugruppe&q=…` | **Palette** der ziehbaren Bauteile |
+| `GET  /catalog/gewerke`, `/naming-profiles`, `/versions` | Stammdaten |
+| `POST /projekte` | Projekt anlegen (Default-Profil/-Version) |
+| `GET  /projekte`, `GET /projekte/{id}` | Projekte lesen (mit Anlagen) |
+| `POST /projekte/{id}/anlagen` | Anlage anlegen (BAS Block 1-2) |
+| `GET  /anlagen/{id}` | Anlage mit Baugruppen + Datenpunktzahl |
+| `POST /anlagen/{id}/baugruppen` | **Drag & Drop**: Template ziehen → Baugruppe anlegen **und** Datenpunkte instanziieren |
+| `DELETE /baugruppen/{id}` | Baugruppe (inkl. Datenpunkte) entfernen |
+| `GET  /anlagen/{id}/datenpunkte` | Datenpunktliste (JSON) |
+| `GET  /anlagen/{id}/dokumente/datenpunktliste` | Datenpunktliste (`.xlsx`) |
+| `GET  /anlagen/{id}/dokumente/kabelzugliste` | Kabelzugliste (`.xlsx`) |
+
+Jeder Request läuft in **einer Transaktion** (Pool-Dependency `api/db.py`):
+Commit bei Erfolg, sonst Rollback. Der Drag-&-Drop-Endpunkt fasst das Anlegen
+der Baugruppe und die rekursive Instanziierung ihrer Datenpunkte atomar zusammen.
+
+**Verifiziert:** Live-Test (FastAPI `TestClient`) spielt den kompletten Ablauf
+Palette → Projekt → Anlage → Kessel ziehen → 22 Hardware-Datenpunkte →
+xlsx-Downloads durch; zusätzlich real per `uvicorn` + HTTP geprüft.
 
 ### Instanziierung (Folding-Policy v1)
 
