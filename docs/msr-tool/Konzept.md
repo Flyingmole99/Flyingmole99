@@ -4,232 +4,243 @@
 > Ziel: Anlagen aufbauen, Baugruppen/Regelorgane/Betriebsmittel per Drag & Drop
 > zuordnen, zu Regelkreisen gruppieren und daraus automatisch
 > **Datenpunktlisten, Regelschemen, Kabelzuglisten und Regelbeschreibungen**
-> erzeugen. Bezeichnung nach **BACtwin**-Standard.
+> erzeugen. Bezeichnung nach **BACtwin (AMEV 1.2)**-Standard.
+
+Bestätigte Rahmenbedingungen:
+- **Plattform:** Web-App, mehrbenutzerfähig (zentrale DB, Browser-Client).
+- **Exporte:** Excel (Datenpunkt-/Kabelzugliste), Word/PDF (Regelbeschreibung),
+  SVG + DXF (Regelschema).
+- **Bezeichnung:** BACtwin-Bibliothek (3 Referenz-Workbooks liegen vor und werden
+  als Stammdaten importiert).
 
 ---
 
-## 0. Getroffene Annahmen (bitte bestätigen/korrigieren)
+## 0. Leitgedanke: BACtwin *ist* die Bauteilbibliothek
 
-Diese drei Punkte prägen die Architektur. Ich habe pragmatische Defaults gewählt
-und den Entwurf so gebaut, dass ein Wechsel jeweils nur ein Modul betrifft:
+Die zentrale Erkenntnis aus den drei BACtwin-Dateien: Der Standard liefert nicht
+nur ein Namensschema, sondern eine **vollständige, vorlagengetriebene
+Bauteilbibliothek**. Das Tool muss Bezeichnungen und Datenpunkte daher nicht
+erfinden — es **importiert BACtwin als Stammdaten** und wird zum
+**Zusammenstellungs-/Instanziierungswerkzeug** darüber.
 
-| # | Thema | Angenommener Default | Warum austauschbar |
-|---|-------|----------------------|--------------------|
-| A | **BACtwin-Bezeichnung** | Generisches, konfigurierbares Segment-Schema (`NamingEngine`), das dem BACtwin-AKS nachgebildet ist. Exakte Kürzellisten/Trennzeichen später einpflegbar. | Bezeichnungslogik ist als eigener Dienst gekapselt; Rest der App kennt nur „gib mir den Schlüssel für Objekt X". |
-| B | **Zielplattform** | **Web-App, mehrbenutzerfähig** (zentrale PostgreSQL, Browser-Client). | Datenmodell & Generatoren sind plattformunabhängig; ein Desktop-/SQLite-Betrieb ist derselbe Kern mit anderem Deployment. |
-| C | **Exportformate** | Excel (`.xlsx`) für Datenpunkt-/Kabelzugliste, Word/PDF für Regelbeschreibung, **SVG + DXF** für Regelschema. | Generatoren schreiben in ein neutrales Zwischenmodell; Renderer sind austauschbar. |
+Drei aufeinander aufbauende Ebenen aus den Dateien:
 
-> **BACtwin-Hinweis:** BACtwin ist mir nicht als vollständig offengelegter,
-> feldscharfer Standard sicher genug bekannt, um Kürzellisten fest zu
-> verdrahten. Deshalb ist die Bezeichnung **datengetrieben** (Regeln +
-> Kürzeltabellen in der DB), nicht hart codiert. Du kannst die BACtwin-Regeln
-> pflegen, ohne die Anwendung anzufassen.
+| Ebene | BACtwin-Quelle | Rolle im Tool |
+|-------|----------------|---------------|
+| **1. Adressstruktur (BAS/UAK)** | Bibliothek 1, Blatt „2 Gliederung" + „4 BACtwin-BAS" | Bezeichnungsschlüssel (8 Blöcke) + Kürzelvokabular |
+| **2. Datenpunkt-Objekttypen** | Bibliothek 2, Blätter „8 / 8.1–8.14" | BACnet-Objektvorlagen (AI/AO/BI/BO/…) je Datenpunkt |
+| **3. Aggregat-Templates** | Bibliothek 3, Blätter „10 AggregateTempl" / „18 BACtwinTab" | Baugruppen/Aggregate mit fertiger Datenpunktliste |
+
+**Folge für die Automatik:** Eine Baugruppe auf die Anlage ziehen = ein
+Aggregat-Template instanziieren. Jedes im Template referenzierte Datenpunkt-Objekt
+wird sofort zu einem konkreten Datenpunkt mit vollständiger BAS-Adresse. Die
+**Datenpunktliste ist damit nativ** — sie entsteht als Nebenprodukt der Zuordnung,
+nicht durch nachgelagerte Logik.
 
 ---
 
-## 1. Fachliches Domänenmodell
+## 1. Der BACtwin-Adressschlüssel (BAS/UAK)
 
-Kern-Erkenntnis: **Automatische Listen/Schemen entstehen nur, wenn jeder
-Bauteil-Typ aus einem Katalog kommt, der seine Datenpunkte, Klemmen und
-Textbausteine als Vorlage mitbringt.** Der Planer instanziiert Typen; die
-Generatoren lesen die Vorlagen aus.
+8 Blöcke, Trennzeichen `_` (Ausnahme: `°` vor Teilanlage), Varianten
+*ungekürzt* / *gekürzt* (einstellige Nummern, einstelliges Gewerk):
 
-### 1.1 Objekthierarchie (Projektseite)
+| # | Block | Inhalt | Beispiel | Vokabular (Quelle) |
+|---|-------|--------|----------|--------------------|
+| 1 | **Gewerk** | KG nach DIN 276 oder 1 Zeichen | `420` / `H` | 12 Gewerke (Bibl. 1, „3 Gewerke") |
+| 2 | **Anlage** | Kürzel + Nr. | `VBA01` | 84 Kürzel |
+| 2.1 | *Teilanlage (opt.)* | Nummer | `00` | — |
+| 3 | **Baugruppe** | Kürzel + Nr. | `STH01` | 302 Kürzel |
+| 4 | **Medium/Position** | Kürzel | `HZV` | 256 Kürzel |
+| 5 | **Aggregat** | Kürzel + Nr. | `EF~01` | 248 Kürzel |
+| 6 | **Betriebsmittel** | Kürzel + Nr. | `T~~01` | 309 Kürzel |
+| 7 | **BM-Funktion** | Kürzel + Nr. | `MW~01` | 196 Kürzel |
+| 8 | *Erweiterung (opt.)* | `EE`/`TL`/`ZP` | `TL` | 3 (Meldung/Aufz./Zeitplan) |
+
+Vollbeispiel (ungekürzt): `420_VBA01_STH01_HZV_EF~01_T~~01_MW~01`
+Mit Erweiterung: `…_MW~01_TL` · Mit Teilanlage: `420_VBA01°00_STH01_…`
+
+Besonderheiten, die die Engine kennen muss:
+- Platzhalterzeichen im Kürzel: `~` (Freistelle), `#####` (nicht belegtes
+  Aggregat), `%%` (Medium-Präfix), `xx`/`nnn` (Nummern-Platzhalter).
+- Feste Stellenpositionen je Variante (Blatt „2 Gliederung" definiert Stelle
+  1–43); Prüfung gegen **MinCharStringLength** (Bibl. 3, Blatt 23).
+- Laufnummern werden je Kontext (Anlage/Baugruppe/Aggregat) atomar vergeben.
+- Bilinguales Vokabular (DE/EN) ist vorhanden → Sprache als Profileigenschaft.
+
+### `NamingEngine`
+Eigener Dienst: nimmt ein Objekt + seinen Elternpfad, liest die Kürzel aus den
+Vokabeltabellen und setzt den Schlüssel gemäß Profil (Variante, Sprache,
+Trennzeichen) zusammen. Ergebnis wird am Objekt gespeichert **und** bleibt über
+einen Regel-Snapshot reproduzierbar. Andere Standards (VDI 3814, RDS-CX) wären
+weitere Profile — die App-Logik bleibt gleich.
+
+---
+
+## 2. Import der BACtwin-Bibliothek (Seed-Pipeline)
+
+Einmaliger/aktualisierbarer Import der drei Workbooks in die `catalog`-Tabellen.
+Jeder Import ist **versioniert** (BACtwin-Version, z. B. „AMEV 1.2"), damit
+Projekte an einen Bibliotheksstand gebunden bleiben.
+
+| Workbook | Blätter | Ziel-Tabellen |
+|----------|---------|---------------|
+| Bibliothek 1 | `3 Gewerke`, `4 BACtwin-BAS` | `bac_gewerk`, `bac_vokabular` (je Block), `naming_profile` |
+| Bibliothek 2 | `8 …`, `8.1–8.14` | `dp_objekttyp`, `dp_objekt_property` |
+| Bibliothek 3 | `10 AggregateTempl`, `18 BACtwinTab` | `aggregat_template`, `aggregat_template_dp` |
+| Bibliothek 3 | `15/16/17/24/25/26` u. a. | `funktionsbereich`, `zustaendigkeit`, `priority_array`, `meldeklasse`, `event_parameter` |
+
+Jede Zeile trägt bereits eine **UUID** (BACtwin) → stabiler Primärschlüssel für
+Nachimporte/Diffs. Der Importer meldet Abweichungen zum Vorstand (neue/geänderte
+Templates), ohne bestehende Projekte automatisch zu verändern.
+
+---
+
+## 3. Fachliches Domänenmodell
 
 ```
 Projekt
-└─ Anlage                 (z.B. Heizzentrale, RLT 01)
-   └─ Baugruppe           (Gaskessel, Wärmepumpe, Lüftungsanlage …)  ← Aggregat
-      ├─ Regelorgan       (Pumpe, Stellantrieb, Mischer …)
-      └─ Betriebsmittel   (Temperaturfühler, Druckfühler, 3-Wegeventil …)
+└─ Anlage                 (BAS Block 1–2, z.B. 420_VBA01)
+   └─ Baugruppe           = instanziiertes Aggregat-Template (Block 3)
+      ├─ Regelorgan       (Aggregat/BM, aktives Stellglied)
+      └─ Betriebsmittel   (BM, Sensorik)          (Block 4–6)
+         └─ Datenpunkt    = instanziiertes DP-Objekt (Block 7–8)
 
-Regelkreis                (quer über Baugruppen gruppierbar)
-   └─ referenziert Betriebsmittel + Regelorgane (m:n)
+Regelkreis                (quer über Baugruppen gruppierbar, m:n)
+   └─ Rolle je Element: Istwert | Sollwert | Stellglied | Meldung | Führung
 ```
 
-- **Projekt**: Klammer für mehrere Anlagen, Rechte, Versionsstände.
-- **Anlage**: bekommt eine BACtwin-Anlagenkennung.
-- **Baugruppe (Aggregat)**: funktionale Einheit; trägt selbst schon Standard-
-  Datenpunkte (z.B. Kessel: Vorlauf-/Rücklauffühler, Brenner-Freigabe, Störung).
-- **Regelorgan**: aktives Stellglied (hat i.d.R. AO/BO-Datenpunkte + Rückmeldung).
-- **Betriebsmittel**: Feldgerät/Sensorik (hat i.d.R. AI/BI-Datenpunkte).
-- **Regelkreis**: **das gruppierende Objekt** für den gemeinsamen Regelkreis.
-  Er verknüpft Führungsgröße (z.B. Fühler), Stellglied (z.B. Ventil) und
-  Regelfunktion (z.B. „Konstantregelung Vorlauf 60 °C") → Grundlage für
+- **Baugruppe** entsteht durch Ziehen eines `aggregat_template`; ihre Datenpunkte
+  werden aus `aggregat_template_dp` materialisiert.
+- **Regelorgan/Betriebsmittel** sind die Aggregat-/BM-Ebenen desselben Templates
+  bzw. einzeln zuziehbare Aggregat-Templates (Fühler, 3-Wegeventil …).
+- **Regelkreis** ist das gruppierende Objekt; die Rollen liefern die Struktur für
   Regelschema **und** Regelbeschreibung.
 
-### 1.2 Katalog / Typenbibliothek (Stammdaten, wiederverwendbar)
-
-Jeder Typ ist eine Vorlage mit angehängten „Baukasten"-Elementen:
-
-```
-BauteilTyp  (Kategorie: Baugruppe | Regelorgan | Betriebsmittel)
-├─ DatenpunktVorlagen[]   → DP-Name-Kürzel, Signalart (AI/AO/BI/BO), Einheit,
-│                            Messbereich, Default-Adresse-Regel, GA-Funktion
-├─ KlemmenVorlagen[]      → Klemme, Adernzahl, Kabeltyp-Empfehlung, Querschnitt
-├─ AnschlussPunkte[]      → für Schema-Symbol (Ein-/Ausgänge, Medium)
-├─ SchemaSymbol           → SVG-Symbol-Referenz (Bibliothekssymbol)
-└─ TextbausteinRegel      → Vorlage für Regelbeschreibung (mit Platzhaltern)
-```
-
-Damit ist die Generierung **deterministisch**: Anlage + zugeordnete Typen +
-Regelkreis-Zuordnung ⇒ alle vier Dokumente ohne manuelle Nacharbeit.
-
 ---
 
-## 2. BACtwin-Bezeichnung (`NamingEngine`)
+## 4. Datenbankstruktur
 
-Bezeichnung wird zentral erzeugt, nicht an jeder Stelle „von Hand". Die Engine
-setzt aus **konfigurierbaren Segmenten** einen Schlüssel zusammen:
+PostgreSQL, zwei Schemata: `catalog` (importierte BACtwin-Stammdaten, versioniert)
+und `project` (Projektdaten).
 
-```
-[Standort] [Gebäude] [Gewerk/Anlagenart] [AnlagenNr] [Aggregat] [BM-Typ] [Laufnr] [Funktion/DP]
-```
-
-- Jedes Segment kommt aus einer **Kürzeltabelle** (`bac_abkuerzung`) mit
-  Gültigkeit/Version → BACtwin-Kürzel pflegbar ohne Deployment.
-- Trennzeichen, Feldreihenfolge, Pflicht/Optional pro Segment als **Profil**
-  (`naming_profile`) hinterlegt → „BACtwin" ist ein Profil, andere Kunden-
-  standards (DIN 6779, VDI 3814, RDS-CX) sind weitere Profile.
-- Laufnummern werden pro Kontext atomar vergeben (Kollisionsfreiheit).
-- Ergebnis wird am Objekt gespeichert **und** ist reproduzierbar (Regel-Snapshot),
-  damit spätere Kürzeländerungen historische Pläne nicht still verändern.
-
-> Sobald du mir die genaue BACtwin-Feldstruktur + Kürzelliste gibst, wird daraus
-> ein Seed-Datensatz für `naming_profile` + `bac_abkuerzung` — keine
-> Code-Änderung.
-
----
-
-## 3. Datenbankstruktur
-
-Zwei logische Bereiche (in PostgreSQL als Schemata `catalog` und `project`):
-
-### 3.1 Stammdaten `catalog` (versioniert, projektübergreifend)
+### 4.1 `catalog` (aus BACtwin importiert)
 
 | Tabelle | Zweck / Schlüsselspalten |
 |---------|--------------------------|
-| `bauteil_typ` | Typkatalog. `id, kategorie, bezeichnung, hersteller, medium, version` |
-| `dp_vorlage` | Datenpunkt-Vorlagen je Typ. `typ_id, dp_kuerzel, signalart, einheit, messbereich, ga_funktion` |
-| `klemmen_vorlage` | Klemmen/Verdrahtung je Typ. `typ_id, klemme, adern, kabeltyp_id, querschnitt` |
-| `kabeltyp` | Kabelstammdaten. `id, bezeichnung, aufbau, querschnitt, schirm` |
-| `schema_symbol` | SVG-Symbolbibliothek. `id, typ_id, svg_ref, anschlusspunkte(jsonb)` |
-| `textbaustein` | Regelbeschreibungs-Vorlagen mit Platzhaltern. `id, regelkreis_art, text_md` |
-| `naming_profile` | Bezeichnungsprofile (BACtwin …). `id, name, segmente(jsonb)` |
-| `bac_abkuerzung` | Kürzeltabellen je Profil/Segment. `profile_id, segment, langtext, kuerzel, gueltig_ab` |
+| `bac_version` | Importstand. `id, bezeichnung, quelle, importiert_am` |
+| `bac_gewerk` | DIN-276-Gewerke. `kg, kuerzel, kuerzel_1z, bezeichnung` |
+| `bac_vokabular` | Kürzel je BAS-Block. `block(1–8), kuerzel, bezeichnung, beschreibung, sprache, version_id` |
+| `naming_profile` | BAS-Profil. `id, name, variante, trennzeichen, segmente(jsonb)` |
+| `dp_objekttyp` | BACnet-Objektvorlage. `uuid, kennung, object_type, bezeichnung, version_id` |
+| `dp_objekt_property` | BACnet-Properties je Objekttyp. `objekttyp_uuid, property, units, min/max_pres, conformance, priority` |
+| `aggregat_template` | Baugruppen/Aggregate. `uuid, typ, gewerk, kennung, bezeichnung, referenz_template` |
+| `aggregat_template_dp` | DP-Zeilen je Template. `template_uuid, dp_objekttyp_uuid, bas_funktion, bas_muster, reihenfolge` |
+| `funktionsbereich`, `zustaendigkeit`, `meldeklasse`, `priority_array`, `event_parameter` | Ergänzende BACtwin-Tabellen |
 
-### 3.2 Projektdaten `project`
+### 4.2 `project`
 
 | Tabelle | Zweck / Schlüsselspalten |
 |---------|--------------------------|
-| `projekt` | `id, name, kunde, naming_profile_id, status, version` |
-| `anlage` | `id, projekt_id, art, bac_kennung, parent(optional)` |
-| `baugruppe` | Instanz eines `bauteil_typ`. `id, anlage_id, typ_id, bac_kennung, position(jsonb)` |
-| `regelorgan` | `id, baugruppe_id, typ_id, bac_kennung` |
-| `betriebsmittel` | `id, baugruppe_id, typ_id, bac_kennung` |
-| `datenpunkt` | Materialisierte DP-Instanz. `id, quelle_ref, dp_kuerzel, signalart, adresse, bac_kennung` |
-| `regelkreis` | Gruppierung. `id, anlage_id, art, bezeichnung, bac_kennung` |
-| `regelkreis_element` | m:n Regelkreis ↔ (Betriebsmittel/Regelorgan). `regelkreis_id, element_typ, element_id, rolle` |
-| `dokument` | Generierte Artefakte. `id, projekt_id, art, format, pfad, erzeugt_am, quelle_hash` |
-| `audit_log` | Änderungshistorie. `id, entity, entity_id, aktion, benutzer, zeit, diff(jsonb)` |
+| `projekt` | `id, name, kunde, naming_profile_id, bac_version_id, status` |
+| `anlage` | `id, projekt_id, gewerk_kg, anlage_kuerzel, nummer, teilanlage, bas` |
+| `baugruppe` | Instanz. `id, anlage_id, aggregat_template_uuid, kuerzel, nummer, medium_pos, position(jsonb), bas` |
+| `betriebsmittel` | `id, baugruppe_id, aggregat_template_uuid, kuerzel, nummer, bas` |
+| `datenpunkt` | Materialisiert. `id, quelle_ref, dp_objekttyp_uuid, bas_funktion, bas(voll), adresse, units, prio` |
+| `regelkreis` | `id, anlage_id, art, bezeichnung, bas` |
+| `regelkreis_element` | m:n. `regelkreis_id, element_typ, element_id, rolle` |
+| `kabel` | Für Kabelzugliste. `id, betriebsmittel_id, von, nach, kabeltyp, adern, querschnitt, laenge` |
+| `dokument` | Exporte. `id, projekt_id, art, format, pfad, quelle_hash, erzeugt_am` |
+| `audit_log` | `id, entity, entity_id, aktion, benutzer, zeit, diff(jsonb)` |
 
-**Grundsatz:** `datenpunkt` ist eine **materialisierte** Kopie aus `dp_vorlage`
-(mit projektindividueller Adresse). So bleiben Projekte stabil, auch wenn der
-Katalog sich weiterentwickelt. Ein „Katalog-Update übernehmen"-Vorgang ist
-bewusst explizit.
+**Grundsatz:** `datenpunkt` ist eine **materialisierte** Instanz aus
+`aggregat_template_dp` (+ projektindividuelle Adresse). Projekte bleiben stabil,
+auch wenn ein neuer BACtwin-Stand importiert wird; „Bibliotheks-Update
+übernehmen" ist ein bewusster, diff-basierter Schritt.
 
 ---
 
-## 4. Projekt-/Dateistruktur (Repository)
-
-Getrennt nach Frontend, Backend-Kern und Generatoren, damit die Generatoren
-auch headless (CLI/Batch) laufen können.
+## 5. Repository-/Projektstruktur
 
 ```
 msr-tool/
-├─ docs/                         # Konzept, ADRs, BACtwin-Mapping
+├─ docs/                         # dieses Konzept, ADRs, BACtwin-Mapping
 ├─ db/
-│  ├─ migrations/                # SQL-Migrationsschritte (catalog + project)
-│  └─ seed/                      # Kürzellisten, Beispiel-Typenkatalog
+│  ├─ migrations/                # catalog + project
+│  └─ seed/                      # Ergebnis der Import-Pipeline (BACtwin)
 ├─ backend/
-│  ├─ domain/                    # Entities: Anlage, Baugruppe, Regelkreis …
-│  ├─ naming/                    # NamingEngine (BACtwin-Profil)
-│  ├─ catalog/                   # Zugriff Typenbibliothek
-│  ├─ generators/                # ← Kern der Automatik
+│  ├─ import/                    # BACtwin-Workbook-Importer (Bibl. 1–3)
+│  ├─ domain/                    # Anlage, Baugruppe, Regelkreis, Datenpunkt
+│  ├─ naming/                    # NamingEngine (BAS/UAK, Profile)
+│  ├─ catalog/                   # Zugriff auf importierte Stammdaten
+│  ├─ generators/                # ← Automatik (neutrales Zwischenmodell)
 │  │  ├─ datapoint_list/         # → xlsx/csv
 │  │  ├─ cable_list/             # → xlsx
 │  │  ├─ control_scheme/         # → svg/dxf
-│  │  └─ control_description/    # → docx/pdf (aus Textbausteinen)
-│  ├─ api/                       # REST/GraphQL: Projekte, Zuordnung, Export
-│  └─ export/                    # Renderer (xlsx/docx/svg/dxf) austauschbar
+│  │  └─ control_description/    # → docx/pdf
+│  ├─ export/                    # Renderer (xlsx/docx/svg/dxf), austauschbar
+│  └─ api/                       # REST/GraphQL
 ├─ frontend/
-│  ├─ canvas/                    # Drag-&-Drop-Arbeitsfläche (Anlagenbaum + Palette)
-│  ├─ palette/                   # Katalog-Bauteile zum Ziehen
-│  ├─ inspector/                 # Eigenschaften/Bezeichnung eines Objekts
-│  └─ regelkreis/                # Gruppieren zu Regelkreisen
-└─ shared/                       # DTOs/Schema zwischen FE und BE
+│  ├─ palette/                   # Katalog-Baugruppen (aus aggregat_template) zum Ziehen
+│  ├─ canvas/                    # Anlagenbaum + Drag & Drop
+│  ├─ inspector/                 # Eigenschaften/BAS-Kennung eines Objekts
+│  └─ regelkreis/               # Gruppieren + Rollen zuweisen
+└─ shared/                       # DTOs FE↔BE
 ```
-
-Neutrales Zwischenmodell: Jeder Generator erzeugt zuerst ein **strukturiertes
-Zwischenobjekt** (z.B. „DataPointTable", „SchemeGraph"), das dann ein Renderer
-in xlsx/docx/svg/dxf gießt. Vorteil: neues Format = neuer Renderer, nicht neuer
-Generator.
 
 ---
 
-## 5. Automatische Generierung – Ableitungslogik
+## 6. Automatische Generierung
 
 | Dokument | Quelle | Ableitung |
 |----------|--------|-----------|
-| **Datenpunktliste** | Alle `datenpunkt` der Anlage | Aus `dp_vorlage` jedes zugeordneten Typs materialisiert; Adresse/BAC-Kennung ergänzt; Gruppierung nach Baugruppe/Regelkreis. |
-| **Kabelzugliste** | `klemmen_vorlage` + Topologie | Pro Feldgerät → Kabel von Gerät zu Schaltschrank/DDC; Kabeltyp/Querschnitt aus Vorlage; Länge optional aus Position/Manuell. |
-| **Regelschema** | `regelkreis` + `schema_symbol` | Regelkreis-Elemente werden als Symbole platziert und über ihre Anschlusspunkte/Medium verbunden → Graph → SVG/DXF. |
-| **Regelbeschreibung** | `regelkreis.art` + `textbaustein` | Passenden Textbaustein wählen, Platzhalter (Sollwerte, Gerätekennungen, BAC-Kennung) füllen → Fließtext. |
+| **Datenpunktliste** | `datenpunkt` der Anlage | Direkt aus instanziierten Aggregat-Templates; Spalten = BACnet-Properties (Object_Name=BAS, Units, Min/Max, Conformance, Priority) → **quasi native BACtwin-Liste**. |
+| **Kabelzugliste** | `kabel` + Betriebsmittel-Topologie | Pro Feldgerät Kabel Gerät→Schaltschrank/DDC; Kabeltyp/Querschnitt aus Vorlage; Länge optional. |
+| **Regelschema** | `regelkreis` + Symbolbibliothek | Regelkreis-Elemente nach Rolle als Symbole platziert, über Medium/Anschlüsse verbunden → Graph → SVG/DXF. |
+| **Regelbeschreibung** | `regelkreis.art` + Textbausteine | Passender Baustein, Platzhalter (Sollwerte, BAS-Kennungen, Gerätebezeichnungen) gefüllt → Fließtext. |
 
-Jeder Export speichert einen `quelle_hash` (Hash aus relevanten Objekten). Ändert
-sich nichts, wird nicht neu erzeugt; ändert sich etwas, wird der Nutzer auf
-veraltete Exporte hingewiesen (Konsistenz-Garantie).
-
----
-
-## 6. Workflow (Benutzer)
-
-1. **Projekt anlegen** → Namensprofil „BACtwin" wählen.
-2. **Anlage(n) anlegen** → BAC-Anlagenkennung wird vorgeschlagen.
-3. **Baugruppen per Drag & Drop** aus der Katalog-Palette auf die Anlage ziehen
-   (Gaskessel, Wärmepumpe, Lüftung …). Standard-Datenpunkte kommen automatisch mit.
-4. **Regelorgane & Betriebsmittel** auf die jeweilige Baugruppe ziehen
-   (Fühler, 3-Wegeventil …).
-5. **Bezeichnung**: `NamingEngine` vergibt BAC-Kennungen live; Planer kann
-   Segmente/Laufnummer im Inspector übersteuern (mit Kollisionsprüfung).
-6. **Regelkreise bilden**: Elemente markieren → „zu Regelkreis gruppieren",
-   Art wählen (z.B. Konstant-/Folgeregelung), Rollen zuweisen (Istwert/Sollwert/
-   Stellglied).
-7. **Validierung**: fehlende Rollen, offene Anschlüsse, doppelte Kennungen,
-   Datenpunkte ohne Adresse → Prüfliste.
-8. **Generieren**: Datenpunktliste, Kabelzugliste, Regelschema, Regelbeschreibung
-   auf Knopfdruck; Vorschau; Export im gewählten Format.
-9. **Versionieren/Freigeben**: Projektstand einfrieren; Exporte werden mit
-   `quelle_hash` an den Stand gebunden.
+Jeder Generator schreibt zuerst ein neutrales Zwischenmodell; Renderer gießen es
+ins Format. Jeder Export speichert `quelle_hash` → veraltete Exporte werden
+erkannt und markiert (Konsistenzgarantie).
 
 ---
 
-## 7. Empfohlener Technologie-Stack (Vorschlag, offen)
+## 7. Workflow (Benutzer)
+
+1. **Projekt anlegen** → BACtwin-Version + Profil (Variante/Sprache) wählen.
+2. **Anlage anlegen** → Gewerk + Anlagenkürzel; BAS Block 1–2 vergeben.
+3. **Baugruppen per Drag & Drop** aus der Palette (= Aggregat-Templates) auf die
+   Anlage ziehen. Datenpunkte kommen automatisch aus dem Template mit.
+4. **Regelorgane & Betriebsmittel** zuordnen (Fühler, 3-Wegeventil …).
+5. **BAS-Kennung** wird live vergeben; im Inspector übersteuerbar
+   (mit Kollisions- und Längenprüfung gegen MinCharStringLength).
+6. **Regelkreise bilden**: Elemente markieren → gruppieren, Art wählen, Rollen
+   zuweisen (Istwert/Sollwert/Stellglied/Meldung).
+7. **Validierung**: fehlende Rollen, offene Anschlüsse, doppelte/zu lange BAS,
+   Datenpunkte ohne Adresse.
+8. **Generieren**: vier Dokumente auf Knopfdruck; Vorschau; Export.
+9. **Versionieren/Freigeben**: Stand einfrieren; Exporte an `quelle_hash` binden.
+
+---
+
+## 8. Technologie-Stack (Vorschlag)
 
 | Schicht | Vorschlag | Begründung |
 |---------|-----------|------------|
-| DB | PostgreSQL (jsonb für flexible Segmente/Positionen) | relational + flexibel; für Desktop-Variante SQLite-kompatibel gehalten |
-| Backend | Python (FastAPI) **oder** .NET | reiche Bibliotheken für xlsx/docx/svg; .NET falls Nähe zum bestehenden Revit-Ökosystem gewünscht |
-| Frontend | Web (React + Canvas/SVG-DnD-Bibliothek) | performantes Drag & Drop, Schema-Rendering im Browser |
-| Export | openpyxl/xlsxwriter, python-docx, svg→dxf via ezdxf | bewährt, formatstabil |
+| DB | PostgreSQL (jsonb für Segmente/Properties) | relational + flexibel |
+| Backend | Python (FastAPI) | reiche Libs: openpyxl (BACtwin-Import), xlsx/docx, ezdxf |
+| Import | openpyxl | liest die BACtwin-Workbooks direkt |
+| Frontend | React + SVG/Canvas-DnD | performantes Drag & Drop + Schema-Rendering |
+| Export | openpyxl/xlsxwriter, python-docx, svg + ezdxf (DXF) | formatstabil |
 
 ---
 
-## 8. Nächste Schritte
+## 9. Nächste Schritte
 
-1. Die drei Annahmen aus **Abschnitt 0** bestätigen/ändern.
-2. **BACtwin-Feldstruktur + Kürzelliste** liefern → Seed für `naming_profile`/`bac_abkuerzung`.
-3. Einen **Beispiel-Bauteiltyp** vollständig durchdefinieren (z.B. Gaskessel mit
-   allen Datenpunkten/Klemmen) als Referenz für den Katalog.
-4. Datenmodell als ER-Diagramm final abstimmen, dann Migrationen anlegen.
+1. **Import-Pipeline** für die 3 Workbooks spezifizieren (Spalten-Mapping je Blatt
+   → `catalog`-Tabellen). Grundlage liegt vor (Blattstruktur ist analysiert).
+2. **Ein Aggregat-Template durchspielen** (z. B. Gaskessel/`AGG_…`): welche
+   Datenpunkte, welche BAS-Kennungen, welche Klemmen → Referenz für Kabelliste.
+3. **ER-Diagramm** finalisieren, dann Migrationen für `catalog` + `project`.
+4. **Symbolbibliothek + Textbausteine** je Regelkreis-Art definieren (die einzigen
+   Inhalte, die BACtwin *nicht* liefert — für Schema und Regelbeschreibung).
 ```
