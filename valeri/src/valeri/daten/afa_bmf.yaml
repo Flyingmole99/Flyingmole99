@@ -1,0 +1,96 @@
+# Steuerliche Nutzungsdauern (AfA) in Anlehnung an die AfA-Tabelle für
+# allgemein verwendbare Anlagegüter (AfA-Tabelle "AV") des BMF.
+#
+# ACHTUNG – Startdatensatz, kein amtlicher Auszug:
+#   Maßgeblich ist ausschließlich die jeweils gültige AfA-Tabelle des
+#   Bundesministeriums der Finanzen bzw. die steuerliche Beurteilung im
+#   Einzelfall (Betriebsvorrichtung vs. unselbständiger Gebäudebestandteil –
+#   diese Abgrenzung entscheidet oft stärker über die AfA-Dauer als die
+#   Produktkategorie selbst). Alle Einträge tragen `geprueft: false`, bis sie
+#   steuerlich bestätigt sind; das Werkzeug weist im Protokoll darauf hin.
+#
+# Felder:
+#   nutzungsdauer_a  betriebsgewöhnliche Nutzungsdauer in Jahren
+#   methode          linear | degressiv (derzeit nur linear implementiert)
+#   fundstelle       Hinweis auf die Position der amtlichen Tabelle
+
+version: "0.1.0"
+grundlage: "AfA-Tabelle AV (BMF) – projektbezogen zu verifizieren"
+schluessel:
+
+  heizungsanlage:
+    bezeichnung: "Heizungsanlage / wärmetechnische Anlage"
+    nutzungsdauer_a: 20
+    methode: linear
+    fundstelle: "AfA-Tabelle AV – zu prüfen (ggf. Gebäudebestandteil)"
+    geprueft: false
+
+  waermepumpe:
+    bezeichnung: "Wärmepumpe"
+    nutzungsdauer_a: 20
+    methode: linear
+    fundstelle: "AfA-Tabelle AV – zu prüfen"
+    geprueft: false
+
+  klimageraet:
+    bezeichnung: "Klima-/Kältegerät"
+    nutzungsdauer_a: 11
+    methode: linear
+    fundstelle: "AfA-Tabelle AV, Pos. Klimageräte"
+    geprueft: false
+
+  bhkw:
+    bezeichnung: "Blockheizkraftwerk"
+    nutzungsdauer_a: 10
+    methode: linear
+    fundstelle: "AfA-Tabelle AV, Pos. Blockheizkraftwerke"
+    geprueft: false
+
+  photovoltaik:
+    bezeichnung: "Photovoltaikanlage"
+    nutzungsdauer_a: 20
+    methode: linear
+    fundstelle: "AfA-Tabelle AV, Pos. Photovoltaikanlagen"
+    geprueft: false
+
+  batteriespeicher:
+    bezeichnung: "Batteriespeicher"
+    nutzungsdauer_a: 10
+    methode: linear
+    fundstelle: "AfA-Tabelle AV – zu prüfen"
+    geprueft: false
+
+  msr:
+    bezeichnung: "MSR-/Gebäudeleittechnik"
+    nutzungsdauer_a: 10
+    methode: linear
+    fundstelle: "AfA-Tabelle AV – zu prüfen"
+    geprueft: false
+
+  betriebsvorrichtung:
+    bezeichnung: "Betriebsvorrichtung, allgemein"
+    nutzungsdauer_a: 15
+    methode: linear
+    fundstelle: "AfA-Tabelle AV – zu prüfen"
+    geprueft: false
+
+  aussenanlage:
+    bezeichnung: "Außenanlage / Erdarbeiten"
+    nutzungsdauer_a: 20
+    methode: linear
+    fundstelle: "AfA-Tabelle AV – zu prüfen"
+    geprueft: false
+
+  gebaeude_betrieb:
+    bezeichnung: "Betriebsgebäude / Gebäudebestandteil"
+    nutzungsdauer_a: 33
+    methode: linear
+    fundstelle: "§ 7 Abs. 4 EStG (3 % p. a.) – Einzelfall prüfen"
+    geprueft: false
+
+  gwg_sofort:
+    bezeichnung: "Geringwertiges Wirtschaftsgut (Sofortabzug)"
+    nutzungsdauer_a: 1
+    methode: linear
+    fundstelle: "§ 6 Abs. 2 EStG"
+    geprueft: false

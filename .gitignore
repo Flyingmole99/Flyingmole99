@@ -17,3 +17,12 @@ packages/
 *.dwl
 *.dwl2
 *~
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+build/
+dist/
+.venv/

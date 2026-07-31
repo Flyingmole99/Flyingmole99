@@ -1,0 +1,203 @@
+# Beispielprojekt: Bürogebäude, Wärme- und Kälteversorgung
+# Referenz  : Gaskessel + Kompressionskältemaschine
+# Variante  : Sole/Wasser-Wärmepumpe + Spitzenlastkessel + Kältespeicher
+#
+# Alle Zahlenwerte sind Demonstrationswerte.
+
+name: "Bürogebäude Musterstraße – Wärme- und Kälteversorgung"
+beschreibung: "Variantenvergleich nach DIN EN 17463 mit Gegenprobe nach VDI 2067"
+bearbeiter: ""
+stand: "2026-07-31"
+rechenmodus: vollkosten
+
+finanzrahmen:
+  betrachtungszeitraum_a: 20
+  basisjahr: 2026
+  eigenkapitalquote: 0.30
+  eigenkapitalrendite: 0.08
+  fremdkapitalzins: 0.045
+  fremdkapital_laufzeit_a: 15
+  kalkulationszins_modus: wacc
+  preisbasis: nominal
+  steuern:
+    modus: auto
+    gewerbesteuer_hebesatz: 4.20
+    verlustvortrag: false
+  preisaenderung:
+    allgemein: 0.02
+    investition: 0.02
+    strom: 0.03
+    erdgas: 0.035
+    wartung_instandsetzung: 0.02
+    personal: 0.025
+
+bedarf:
+  - energieart: waerme
+    jahresbedarf_kwh: 800000
+    lastgang:
+      art: profil
+      profiltyp: waerme
+      heizgrenze_c: 15.0
+      vollbenutzungsstunden_h: 1800
+  - energieart: kaelte
+    jahresbedarf_kwh: 250000
+    lastgang:
+      art: profil
+      profiltyp: kaelte
+      vollbenutzungsstunden_h: 1100
+  - energieart: strom
+    jahresbedarf_kwh: 300000
+    lastgang:
+      art: profil
+      profiltyp: strom
+
+energiepreise:
+  - traeger: strom
+    arbeitspreis_eur_kwh: 0.22
+    leistungspreis_eur_kw_a: 120.0
+    grundpreis_eur_a: 500.0
+    co2_faktor_kg_kwh: 0.38
+    bemerkung: "Vollkosten inkl. Netzentgelt, Umlagen, Stromsteuer"
+  - traeger: erdgas
+    arbeitspreis_eur_kwh: 0.09
+    grundpreis_eur_a: 300.0
+    co2_faktor_kg_kwh: 0.201
+    bemerkung: "CO2-Preis im Arbeitspreis enthalten (BEHG)"
+
+varianten:
+
+  # ------------------------------------------------------------------ Referenz
+  - name: "Gaskessel"
+    beschreibung: "Erdgas-Brennwertkessel, Kompressionskälte, kein Speicher"
+    ist_referenz: true
+    erzeugerpark:
+      erzeuger:
+        - name: "Kessel"
+          typ: kessel
+          energieart: waerme
+          prioritaet: 1
+          nutzungsgrad: 0.94
+          auslegungsfaktor: 1.1
+          hilfsstrom_anteil: 0.01
+        - name: "KKM"
+          typ: kaeltemaschine
+          energieart: kaelte
+          prioritaet: 1
+          jaz: 4.2
+          auslegungsfaktor: 1.1
+          hilfsstrom_anteil: 0.05
+        - name: "Netzstrom"
+          typ: direktstrom
+          energieart: strom
+          prioritaet: 1
+    investition:
+      nebenkosten_anteil: 0.15
+      positionen:
+        - bezeichnung: "Gas-Brennwertkessel 500 kW"
+          kategorie: waermeerzeuger.kessel.gas
+          einzelpreis_eur: 62000
+        - bezeichnung: "Kompressionskältemaschine 300 kW"
+          kategorie: kaelteerzeuger.kompressionskaelte
+          einzelpreis_eur: 105000
+        - bezeichnung: "Rückkühlwerk"
+          kategorie: kaelteerzeuger.rueckkuehler
+          einzelpreis_eur: 45000
+        - bezeichnung: "Verteilung, Pumpen, Anbindung"
+          kategorie: verteilung.rohrnetz
+          einzelpreis_eur: 60000
+        - bezeichnung: "MSR / Gebäudeautomation"
+          kategorie: msr.gebaeudeautomation
+          einzelpreis_eur: 25000
+    betrieb:
+      stundensatz_eur_h: 68.0
+      versicherung_anteil_investition: 0.003
+
+  # ----------------------------------------------------------------- Variante
+  - name: "Waermepumpe + Speicher"
+    beschreibung: "Sole/Wasser-WP mit Erdsonden, Gas-Spitzenlastkessel, Kältespeicher"
+    erzeugerpark:
+      erzeuger:
+        - name: "Waermepumpe"
+          typ: waermepumpe
+          energieart: waerme
+          prioritaet: 1
+          jaz: 4.0
+          nennleistung_kw: 320
+          hilfsstrom_anteil: 0.02
+        - name: "Spitzenkessel"
+          typ: kessel
+          energieart: waerme
+          prioritaet: 2
+          nutzungsgrad: 0.94
+          auslegungsfaktor: 1.1
+        - name: "KKM"
+          typ: kaeltemaschine
+          energieart: kaelte
+          prioritaet: 1
+          jaz: 4.6
+          auslegungsfaktor: 1.05
+          hilfsstrom_anteil: 0.05
+        - name: "Netzstrom"
+          typ: direktstrom
+          energieart: strom
+          prioritaet: 1
+    speicher:
+      - name: "Kaeltespeicher"
+        energieart: kaelte
+        modus: maximal
+        kapazitaet_kwh: 1500
+        entladeleistung_kw: 250
+        ladeleistung_kw: 200
+        wirkungsgrad_laden: 0.98
+        wirkungsgrad_entladen: 0.98
+        verlust_pro_tag: 0.03
+        max_kappung_anteil: 0.5
+      - name: "Waermespeicher"
+        energieart: waerme
+        modus: maximal
+        kapazitaet_kwh: 2000
+        entladeleistung_kw: 300
+        ladeleistung_kw: 250
+        verlust_pro_tag: 0.04
+        max_kappung_anteil: 0.4
+    investition:
+      nebenkosten_anteil: 0.15
+      gesamtfoerderung:
+        bezeichnung: "Bundesförderung effiziente Gebäude (Beispielwert)"
+        anteil: 0.25
+        hoechstbetrag_eur: 200000
+        behandlung: minderung_afa
+      positionen:
+        - bezeichnung: "Sole/Wasser-Wärmepumpe 320 kW"
+          kategorie: waermeerzeuger.waermepumpe.sole
+          einzelpreis_eur: 235000
+        - bezeichnung: "Erdsondenfeld"
+          kategorie: waermeerzeuger.erdsonde
+          einzelpreis_eur: 260000
+        - bezeichnung: "Gas-Spitzenlastkessel 250 kW"
+          kategorie: waermeerzeuger.kessel.gas
+          einzelpreis_eur: 32000
+        - bezeichnung: "Kompressionskältemaschine 200 kW"
+          kategorie: kaelteerzeuger.kompressionskaelte
+          einzelpreis_eur: 78000
+        - bezeichnung: "Rückkühlwerk"
+          kategorie: kaelteerzeuger.rueckkuehler
+          einzelpreis_eur: 38000
+        - bezeichnung: "Kältespeicher 1.500 kWh"
+          kategorie: speicher.kaltwasser
+          einzelpreis_eur: 95000
+        - bezeichnung: "Wärmespeicher 2.000 kWh"
+          kategorie: speicher.warmwasser
+          einzelpreis_eur: 78000
+        - bezeichnung: "Verteilung, Pumpen, Anbindung"
+          kategorie: verteilung.rohrnetz
+          einzelpreis_eur: 70000
+        - bezeichnung: "MSR / Gebäudeautomation"
+          kategorie: msr.gebaeudeautomation
+          einzelpreis_eur: 38000
+    betrieb:
+      stundensatz_eur_h: 68.0
+      versicherung_anteil_investition: 0.003
+    weitere_nutzen:
+      - bezeichnung: "Wegfall Schornsteinfeger/Emissionsmessung (Teilbetrieb)"
+        betrag_eur_a: 800

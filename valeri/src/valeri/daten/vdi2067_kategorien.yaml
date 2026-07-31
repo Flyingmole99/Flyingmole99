@@ -1,0 +1,258 @@
+# Produktkategorien mit technischen Nutzungsdauern und betriebsgebundenen
+# Aufwandskennwerten in Anlehnung an VDI 2067 Blatt 1 (Anhang).
+#
+# ACHTUNG – Startdatensatz, kein Normauszug:
+#   Die Zahlenwerte sind branchenübliche Richtwerte und ersetzen NICHT den
+#   Blick in die aktuelle Ausgabe der VDI 2067 Blatt 1. Die Norm ist
+#   urheberrechtlich geschützt; die dort tabellierten Werte sind hier bewusst
+#   nicht vollständig abgebildet. Jede Kategorie trägt daher `geprueft: false`,
+#   bis sie projekt- bzw. büroseitig gegen die Norm verifiziert wurde.
+#   Ungeprüfte Kategorien erzeugen im Berechnungsprotokoll einen Hinweis.
+#
+# Bedeutung der Felder:
+#   nutzungsdauer_a        technische Nutzungsdauer -> Ersatzinvestition/Restwert
+#   instandsetzung_anteil  Instandsetzungsaufwand je Jahr, Anteil der Investition
+#   wartung_anteil         Wartung/Inspektion je Jahr, Anteil der Investition
+#   bedienaufwand_h_a      Bedienaufwand in Stunden je Jahr
+#   afa_schluessel         Vorgabe-Verknüpfung in afa_bmf.yaml (steuerliche ND)
+
+version: "0.1.0"
+grundlage: "VDI 2067 Blatt 1 – Wirtschaftlichkeit gebäudetechnischer Anlagen"
+kategorien:
+
+  # ------------------------------------------------------------ Wärmeerzeugung
+  waermeerzeuger.kessel.gas:
+    bezeichnung: "Heizkessel, gasbefeuert"
+    gruppe: waermeerzeugung
+    nutzungsdauer_a: 20
+    instandsetzung_anteil: 0.015
+    wartung_anteil: 0.015
+    bedienaufwand_h_a: 10
+    afa_schluessel: heizungsanlage
+    geprueft: false
+
+  waermeerzeuger.kessel.oel:
+    bezeichnung: "Heizkessel, ölbefeuert"
+    gruppe: waermeerzeugung
+    nutzungsdauer_a: 20
+    instandsetzung_anteil: 0.015
+    wartung_anteil: 0.020
+    bedienaufwand_h_a: 15
+    afa_schluessel: heizungsanlage
+    geprueft: false
+
+  waermeerzeuger.kessel.biomasse:
+    bezeichnung: "Biomassekessel / Pelletkessel"
+    gruppe: waermeerzeugung
+    nutzungsdauer_a: 15
+    instandsetzung_anteil: 0.030
+    wartung_anteil: 0.030
+    bedienaufwand_h_a: 25
+    afa_schluessel: heizungsanlage
+    geprueft: false
+
+  waermeerzeuger.waermepumpe.luft:
+    bezeichnung: "Wärmepumpe, Luft/Wasser"
+    gruppe: waermeerzeugung
+    nutzungsdauer_a: 18
+    instandsetzung_anteil: 0.015
+    wartung_anteil: 0.015
+    bedienaufwand_h_a: 8
+    afa_schluessel: waermepumpe
+    geprueft: false
+
+  waermeerzeuger.waermepumpe.sole:
+    bezeichnung: "Wärmepumpe, Sole/Wasser"
+    gruppe: waermeerzeugung
+    nutzungsdauer_a: 20
+    instandsetzung_anteil: 0.010
+    wartung_anteil: 0.015
+    bedienaufwand_h_a: 8
+    afa_schluessel: waermepumpe
+    geprueft: false
+
+  waermeerzeuger.erdsonde:
+    bezeichnung: "Erdwärmesonden / Bohrungen"
+    gruppe: waermeerzeugung
+    nutzungsdauer_a: 50
+    instandsetzung_anteil: 0.002
+    wartung_anteil: 0.000
+    bedienaufwand_h_a: 0
+    afa_schluessel: aussenanlage
+    geprueft: false
+
+  waermeerzeuger.bhkw:
+    bezeichnung: "Blockheizkraftwerk"
+    gruppe: waermeerzeugung
+    nutzungsdauer_a: 15
+    instandsetzung_anteil: 0.060
+    wartung_anteil: 0.040
+    bedienaufwand_h_a: 30
+    afa_schluessel: bhkw
+    geprueft: false
+
+  waermeerzeuger.uebergabestation:
+    bezeichnung: "Fernwärme-Übergabestation"
+    gruppe: waermeerzeugung
+    nutzungsdauer_a: 30
+    instandsetzung_anteil: 0.010
+    wartung_anteil: 0.015
+    bedienaufwand_h_a: 5
+    afa_schluessel: heizungsanlage
+    geprueft: false
+
+  # ------------------------------------------------------------ Kälteerzeugung
+  kaelteerzeuger.kompressionskaelte:
+    bezeichnung: "Kompressionskältemaschine"
+    gruppe: kaelteerzeugung
+    nutzungsdauer_a: 15
+    instandsetzung_anteil: 0.020
+    wartung_anteil: 0.025
+    bedienaufwand_h_a: 15
+    afa_schluessel: klimageraet
+    geprueft: false
+
+  kaelteerzeuger.absorptionskaelte:
+    bezeichnung: "Absorptionskältemaschine"
+    gruppe: kaelteerzeugung
+    nutzungsdauer_a: 18
+    instandsetzung_anteil: 0.020
+    wartung_anteil: 0.025
+    bedienaufwand_h_a: 20
+    afa_schluessel: klimageraet
+    geprueft: false
+
+  kaelteerzeuger.rueckkuehler:
+    bezeichnung: "Rückkühlwerk / Freikühler"
+    gruppe: kaelteerzeugung
+    nutzungsdauer_a: 15
+    instandsetzung_anteil: 0.020
+    wartung_anteil: 0.020
+    bedienaufwand_h_a: 10
+    afa_schluessel: klimageraet
+    geprueft: false
+
+  # -------------------------------------------------------------- Speicherung
+  speicher.warmwasser:
+    bezeichnung: "Wärmespeicher (Wasser)"
+    gruppe: speicher
+    nutzungsdauer_a: 20
+    instandsetzung_anteil: 0.010
+    wartung_anteil: 0.010
+    bedienaufwand_h_a: 2
+    afa_schluessel: heizungsanlage
+    geprueft: false
+
+  speicher.kaltwasser:
+    bezeichnung: "Kältespeicher (Wasser/Eis)"
+    gruppe: speicher
+    nutzungsdauer_a: 20
+    instandsetzung_anteil: 0.010
+    wartung_anteil: 0.010
+    bedienaufwand_h_a: 2
+    afa_schluessel: klimageraet
+    geprueft: false
+
+  speicher.batterie:
+    bezeichnung: "Batteriespeicher"
+    gruppe: speicher
+    nutzungsdauer_a: 15
+    instandsetzung_anteil: 0.010
+    wartung_anteil: 0.010
+    bedienaufwand_h_a: 2
+    afa_schluessel: batteriespeicher
+    geprueft: false
+
+  # -------------------------------------------------------------- Verteilung
+  verteilung.rohrnetz:
+    bezeichnung: "Rohrnetz, Verteilung, Dämmung"
+    gruppe: verteilung
+    nutzungsdauer_a: 40
+    instandsetzung_anteil: 0.010
+    wartung_anteil: 0.000
+    bedienaufwand_h_a: 0
+    afa_schluessel: heizungsanlage
+    geprueft: false
+
+  verteilung.pumpen:
+    bezeichnung: "Umwälzpumpen"
+    gruppe: verteilung
+    nutzungsdauer_a: 10
+    instandsetzung_anteil: 0.030
+    wartung_anteil: 0.020
+    bedienaufwand_h_a: 3
+    afa_schluessel: heizungsanlage
+    geprueft: false
+
+  verteilung.uebergabe:
+    bezeichnung: "Raumübergabe (Heizflächen, Kühldecken)"
+    gruppe: verteilung
+    nutzungsdauer_a: 30
+    instandsetzung_anteil: 0.010
+    wartung_anteil: 0.000
+    bedienaufwand_h_a: 0
+    afa_schluessel: heizungsanlage
+    geprueft: false
+
+  # ---------------------------------------------------------- Luft / Regelung
+  rlt.zentralgeraet:
+    bezeichnung: "RLT-Zentralgerät mit WRG"
+    gruppe: lufttechnik
+    nutzungsdauer_a: 20
+    instandsetzung_anteil: 0.020
+    wartung_anteil: 0.025
+    bedienaufwand_h_a: 20
+    afa_schluessel: klimageraet
+    geprueft: false
+
+  msr.gebaeudeautomation:
+    bezeichnung: "MSR / Gebäudeautomation"
+    gruppe: automation
+    nutzungsdauer_a: 15
+    instandsetzung_anteil: 0.025
+    wartung_anteil: 0.020
+    bedienaufwand_h_a: 10
+    afa_schluessel: msr
+    geprueft: false
+
+  # --------------------------------------------------------------- Erzeugung
+  strom.photovoltaik:
+    bezeichnung: "Photovoltaikanlage"
+    gruppe: stromerzeugung
+    nutzungsdauer_a: 25
+    instandsetzung_anteil: 0.005
+    wartung_anteil: 0.010
+    bedienaufwand_h_a: 4
+    afa_schluessel: photovoltaik
+    geprueft: false
+
+  elektro.hausanschluss:
+    bezeichnung: "Elektro-Hausanschluss / Trafo / NSHV"
+    gruppe: elektro
+    nutzungsdauer_a: 30
+    instandsetzung_anteil: 0.010
+    wartung_anteil: 0.005
+    bedienaufwand_h_a: 2
+    afa_schluessel: betriebsvorrichtung
+    geprueft: false
+
+  # ------------------------------------------------------------------ Bauteil
+  bau.technikzentrale:
+    bezeichnung: "Bauliche Maßnahmen, Technikzentrale"
+    gruppe: bau
+    nutzungsdauer_a: 50
+    instandsetzung_anteil: 0.005
+    wartung_anteil: 0.000
+    bedienaufwand_h_a: 0
+    afa_schluessel: gebaeude_betrieb
+    geprueft: false
+
+  planung.honorare:
+    bezeichnung: "Planung, Honorare, Baunebenkosten"
+    gruppe: planung
+    nutzungsdauer_a: 20
+    instandsetzung_anteil: 0.000
+    wartung_anteil: 0.000
+    bedienaufwand_h_a: 0
+    afa_schluessel: heizungsanlage
+    geprueft: false
